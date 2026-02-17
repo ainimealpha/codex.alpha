@@ -25,13 +25,14 @@
 
     <!-- carousel area for categories (auto + manual slide) -->
     <section id="carousel" class="carousel">
+      <!-- left nav kept (small) but will hide on very small screens; right nav removed per request -->
       <button class="carousel-nav prev" aria-label="Previous" onclick="carouselPrev()">‹</button>
 
       <div class="carousel-stage" id="carouselStage">
         <!-- left / center / right panels inserted by JS -->
       </div>
 
-      <button class="carousel-nav next" aria-label="Next" onclick="carouselNext()">›</button>
+      <!-- indicators always centered below -->
       <div class="carousel-indicators" id="carouselIndicators"></div>
     </section>
 
