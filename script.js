@@ -1,4 +1,5 @@
-// script.js - big update: carousel on index, themed checklist BG, detail -> tag jump, narrative, small logo in items
+// script.js - fixes: remove right nav causing visual bug, center indicators, items search/filter layout,
+// keep core behavior: carousel, items, detail, tag-jump, pendingTag
 
 // Navigation helpers
 function goHome(){ window.location.href = "index.html"; }
@@ -6,12 +7,12 @@ function goBack(){ window.history.back(); }
 
 // Category theme mapping (pastel gradients + tag bg)
 const CATEGORY_THEME = {
-  CHARACTER: { bg: "linear-gradient(180deg,#ffe6e8,#ffd6da)", tagBg: "#ffd6da", accent: "#ff6b6b" },
-  AREA:      { bg: "linear-gradient(180deg,#fff2e6,#ffd9b8)", tagBg: "#ffe6c7", accent: "#ff9f43" },
-  PET:       { bg: "linear-gradient(180deg,#fffbe6,#fff4b2)", tagBg: "#fff5b2", accent: "#ffd54f" },
+  CHARACTER: { bg: "linear-gradient(180deg,#ffdfe4,#ffd0d6)", tagBg: "#ffd6da", accent: "#ff6b6b" },
+  AREA:      { bg: "linear-gradient(180deg,#fff3e6,#ffd9b8)", tagBg: "#ffe6c7", accent: "#ff9f43" },
+  PET:       { bg: "linear-gradient(180deg,#fffbe6,#fff9c0)", tagBg: "#fff5b2", accent: "#ffd54f" },
   MONSTER:   { bg: "linear-gradient(180deg,#f3e8ff,#e8d7ff)", tagBg: "#eadcff", accent: "#9b59b6" },
   MAGIC:     { bg: "linear-gradient(180deg,#e8f4ff,#d0ecff)", tagBg: "#d6efff", accent: "#4da6ff" },
-  DEFAULT:   { bg: "linear-gradient(180deg,#fff9c4,#ffe082)", tagBg: "#fff3cd", accent: "#ffd54f" }
+  DEFAULT:   { bg: "linear-gradient(180deg,#f9f1ff,#e6f7ff)", tagBg: "#fff3cd", accent: "#ffd54f" }
 };
 
 // shared helpers
@@ -37,15 +38,12 @@ function findItemById(id){
 // Apply category visual theme (used on items & detail)
 function applyCategoryTheme(catKey){
   const theme = (catKey && CATEGORY_THEME[catKey]) ? CATEGORY_THEME[catKey] : CATEGORY_THEME.DEFAULT;
-  // page-level background for items/detail
   document.body.style.background = theme.bg;
-  // set CSS variables for tag bg and accent
   document.documentElement.style.setProperty('--tag-bg', theme.tagBg);
   document.documentElement.style.setProperty('--accent-color', theme.accent);
-  // also set checklist panel bg var (CSS reads var(--tag-bg))
 }
 
-// Reset any body background (used before rendering pages)
+// Reset any body background
 function resetBodyBackground(){
   document.body.style.background = "";
   document.body.style.backgroundImage = "";
@@ -61,6 +59,7 @@ function resetBodyBackground(){
 
 /* =========================
    INDEX (page 1) - Carousel
+   - Right nav removed; indicators always centered under carousel
 ========================= */
 let carouselIndex = 0;
 let carouselTimer = null;
@@ -74,7 +73,6 @@ function renderCarousel(){
   if(keys.length === 0){ stage.innerHTML = ""; return; }
   const total = keys.length;
 
-  // compute indexes
   const centerKey = keys[carouselIndex];
   const leftIndex = (carouselIndex - 1 + total) % total;
   const rightIndex = (carouselIndex + 1) % total;
@@ -85,7 +83,6 @@ function renderCarousel(){
   const leftImg = repImageForCategory(leftKey);
   const rightImg = repImageForCategory(rightKey);
 
-  // stage content: left small, center large, right small
   stage.innerHTML = `
     <div class="slot left-slot" data-key="${leftKey}">
       <img src="${leftImg}" alt="${leftKey} preview" loading="lazy">
@@ -96,7 +93,6 @@ function renderCarousel(){
       <img src="${centerImg}" alt="${centerKey} preview" loading="lazy">
       <div class="center-overlay">
         <div class="center-title">${DATA[centerKey].title}</div>
-        <div class="center-subtle">${DATA[centerKey].title}</div>
       </div>
     </div>
 
@@ -106,23 +102,21 @@ function renderCarousel(){
     </div>
   `;
 
-  // indicators
+  // indicators centered under
   indicators.innerHTML = keys.map((k, i) => `<button class="dot ${i===carouselIndex?'active':''}" onclick="carouselGo(${i})" aria-label="Slide ${i+1}"></button>`).join('');
 
-  // center click -> go to items for that category
+  // center click -> go to items
   const centerNode = stage.querySelector(".center-slot");
   if(centerNode){
     centerNode.style.cursor = "pointer";
     centerNode.onclick = () => {
       const key = centerNode.dataset.key;
       localStorage.setItem("activeCategory", key);
-      // clear pendingTag if any
       localStorage.removeItem("pendingTag");
       window.location.href = "items.html";
     };
   }
 
-  // side images manual slide: clicking left/right moves carousel (but not navigate to items)
   const leftNode = stage.querySelector(".left-slot");
   if(leftNode) leftNode.onclick = () => carouselPrev();
   const rightNode = stage.querySelector(".right-slot");
@@ -165,9 +159,9 @@ function initCarousel(){
 }
 
 /* =========================
-   PAGE 2: items + modern chip-style filters (with themed checklist BG)
-   - small logo next to category title (set in renderItems)
-   - detect pendingTag (when navigated from detail)
+   PAGE 2: items + modern chip-style filters (themed checklist BG)
+   - Search centered, shorter; Filters placed under search
+   - Spacing increased so cards don't "nempel"
 ========================= */
 
 function uniqueTagsForCategory(catKey){
@@ -182,7 +176,6 @@ function showChecklist(catKey){
   const panel = document.createElement("div");
   panel.id = "checklistPanel";
   panel.className = "checklist-panel";
-  // checklist-panel background uses CSS var --tag-bg
   const tags = uniqueTagsForCategory(catKey);
   let html = `<div class="checklist-header"><strong>Filter tags</strong> <button class="closeChecklist" type="button" onclick="hideChecklist()">✕</button></div>`;
   html += `<div class="checklist-chips">`;
@@ -229,6 +222,7 @@ function manageChecklistToggle(catKey){
       const panel = document.getElementById("checklistPanel");
       if(panel) hideChecklist(); else showChecklist(catKey);
     };
+    // ensure button appears below search (controls is column-centered)
     controls.appendChild(btn);
   }
   const si = document.getElementById("searchInput");
@@ -276,7 +270,6 @@ function renderItems(){
     const div = document.createElement("div");
     div.className = "card item-card small-card";
     const thumb = (it.images && it.images.main) ? it.images.main : (typeof PLACEHOLDER !== "undefined" ? PLACEHOLDER : "");
-    // PAGE 2 shows image, name, and NICKNAME (nickname = name here for now)
     div.innerHTML = `
       <img src="${thumb}" loading="lazy" alt="${it.name}">
       <h3>${it.name}</h3>
@@ -291,32 +284,28 @@ function renderItems(){
   });
 }
 
-/* Detect and apply pendingTag (when coming from detail -> tag click) */
+/* apply pendingTag on load (when coming from detail) */
 function applyPendingTagOnLoad(){
   const pending = localStorage.getItem("pendingTag");
   if(!pending) return;
   const category = localStorage.getItem("activeCategory");
-  // ensure checklist rendered
   showChecklist(category);
-  // wait a tick for panel to be in DOM
   setTimeout(() => {
     const panel = document.getElementById("checklistPanel");
     if(!panel) { localStorage.removeItem("pendingTag"); return; }
     const cb = Array.from(panel.querySelectorAll('input[type="checkbox"]')).find(i => i.value === pending);
     if(cb){
       cb.checked = true;
-      // apply immediately
       applyChecklistFilters();
+      localStorage.removeItem("pendingTag");
     } else {
-      // nothing matched: remove pending
       localStorage.removeItem("pendingTag");
     }
   }, 150);
 }
 
 /* =========================
-   PAGE 3: detail (tags clickable => jump back to items & auto apply)
-   - narrative / lore block added (longer text)
+   PAGE 3: unchanged core behavior (tag click -> pendingTag handled above)
 ========================= */
 function ensureDetailOverlay(){
   let ov = document.getElementById("detailOverlay");
@@ -345,7 +334,6 @@ function renderDetail(){
   const selected = findItemById(id);
   if(!selected){ container.innerHTML = "<div class='card'><h3>Item not found</h3></div>"; return; }
 
-  // determine category for this item (prefer stored activeCategory)
   let category = localStorage.getItem("activeCategory");
   if(!category){
     Object.keys(DATA).some(k => {
@@ -355,7 +343,6 @@ function renderDetail(){
   }
   applyCategoryTheme(category);
 
-  // MAIN wallpaper fixed to selected.images.main
   const wallpaperUrl = (selected.images && selected.images.main) ? selected.images.main : "";
   if(wallpaperUrl){
     document.body.style.backgroundImage = `url('${wallpaperUrl}')`;
@@ -373,11 +360,8 @@ function renderDetail(){
   const mainImg = (selected.images && selected.images.main) ? selected.images.main : "";
   const extras = (selected.images && selected.images.extras) ? selected.images.extras.slice(0,3) : [];
   const tags = (selected.tags || []).slice(0,10);
-
-  // narrative: use selected.lore if exists, else construct extended narrative
   const narrative = selected.lore ? selected.lore : `${selected.desc} Legends whisper of its origin: a tale woven through time and conflict, shaping the fate of many who stand before it. Once rumored to be forged in ancient trials, its presence now marks the turning point of many adventures.`;
 
-  // Render hero and extras, include narrative paragraph and tag elements clickable
   container.innerHTML = `
     <div class="detail-wrapper">
       <div class="detail-card hero-card">
@@ -403,16 +387,13 @@ function renderDetail(){
   `;
 }
 
-// When a tag in detail is clicked, jump to items, open filters and apply that tag
 function onDetailTagClick(tag, category){
-  // set the active category and pending tag so items page auto-opens filters
   localStorage.setItem("activeCategory", category);
   localStorage.setItem("pendingTag", tag);
-  // navigate to items page
   window.location.href = "items.html";
 }
 
-/* Modal preview (extras only) */
+/* Modal handlers (unchanged) */
 function openImageModal(src){
   const modal = document.getElementById("imgModal");
   const img = document.getElementById("imgModalImg");
@@ -429,10 +410,7 @@ function closeImageModal(){
   if(modal) modal.style.display = "none";
   document.removeEventListener("keydown", escModalHandler);
 }
-
-function escModalHandler(e){
-  if(e.key === "Escape") closeImageModal();
-}
+function escModalHandler(e){ if(e.key === "Escape") closeImageModal(); }
 
 document.addEventListener("click", function(e){
   const modal = document.getElementById("imgModal");
@@ -456,9 +434,9 @@ document.addEventListener("DOMContentLoaded", function(){
       si.addEventListener("focus", () => manageChecklistToggle(localStorage.getItem("activeCategory")));
       si.addEventListener("input", () => renderItems());
       si.addEventListener("blur", () => setTimeout(()=>manageChecklistToggle(localStorage.getItem("activeCategory")), 150));
+      // center shorter search: ensure style applied by CSS
     }
     renderItems();
-    // handle pending tag (from detail)
     setTimeout(()=>applyPendingTagOnLoad(), 250);
   }
 
