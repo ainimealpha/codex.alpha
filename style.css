@@ -1,8 +1,9 @@
-/* style.css — update for carousel, smaller grid, themed checklist BG, detail tag buttons */
+/* style.css — fixes for bug, dreamy color, centered search+filters, spacing */
 *{box-sizing:border-box;}
 html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,system-ui,-apple-system,"Helvetica Neue",Arial;}
+/* dreamy but not garish */
 body{
-  background: linear-gradient(180deg,#fff9c4,#ffe082);
+  background: linear-gradient(180deg,#f8ecff 0%, #e6f7ff 45%, #fff7ef 100%);
   color:#222;
   -webkit-font-smoothing:antialiased;
 }
@@ -14,38 +15,43 @@ body{
 }
 
 /* container and header (centered for index) */
-.container{max-width:1100px;margin:0 auto;padding:12px;position:relative;z-index:5;}
+.container{max-width:1100px;margin:0 auto;padding:14px;position:relative;z-index:5;}
 .header{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:10px;}
 .header-center{flex-direction:column;align-items:center;text-align:center;padding-top:6px;padding-bottom:8px;}
-.big-logo{font-family:'Bungee',sans-serif;font-size:36px;letter-spacing:1px;margin:0;}
+.big-logo{font-family:'Bungee',sans-serif;font-size:34px;letter-spacing:1px;margin:0;color:#241332;}
 .season-block{margin-top:10px;}
-.season-line{font-weight:800;font-size:13px;letter-spacing:1px;}
-.season-sub{font-size:12px;margin-top:4px;color:#333;}
+.season-line{font-weight:800;font-size:13px;letter-spacing:1px;color:#35203b;}
+.season-sub{font-size:12px;margin-top:4px;color:#3b2b3b;}
 .center-sub{margin-top:10px;color:#555;font-size:13px;}
 
 /* nav buttons */
 .nav-btn{background:#fff;border:none;padding:8px 12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06);cursor:pointer;font-weight:700;}
 
 /* carousel */
-.carousel{display:flex;align-items:center;justify-content:center;gap:8px;position:relative;margin:12px 0 18px;}
+.carousel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;margin:12px 0 18px;}
 .carousel-stage{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:980px;overflow:visible;position:relative;padding:8px;}
 .slot{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;overflow:hidden;position:relative;}
 .slot img{display:block;border-radius:8px;object-fit:cover;}
 .left-slot img,.right-slot img{width:110px;height:80px;}
 .center-slot img{width:320px;height:200px;}
-.slot-title{position:absolute;bottom:8px;left:8px;background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;font-weight:800;font-size:12px;}
+.slot-title{position:absolute;bottom:8px;left:8px;background:rgba(255,255,255,0.95);padding:6px 8px;border-radius:8px;font-weight:800;font-size:12px;}
 .center-overlay{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:18px;}
-.center-title{background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:12px;font-weight:900;}
-.carousel-nav{background:rgba(255,255,255,0.95);border:none;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.08);font-size:20px;}
+.center-title{background:rgba(255,255,255,0.96);padding:8px 12px;border-radius:12px;font-weight:900;}
+.carousel-nav{background:rgba(255,255,255,0.95);border:none;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.08);font-size:20px;position:absolute;left:6px;top:50%;transform:translateY(-50%);z-index:1000;}
+/* hide nav on very small screens to avoid overlap */
+@media(max-width:420px){ .carousel-nav{display:none;} }
+
+/* indicators centered below */
 .carousel-indicators{display:flex;gap:6px;justify-content:center;margin-top:10px;}
 .carousel-indicators .dot{width:8px;height:8px;border-radius:999px;border:none;background:rgba(0,0,0,0.12);cursor:pointer;}
 .carousel-indicators .dot.active{background:rgba(0,0,0,0.4);}
 
-/* grid cards — very compact: 4 columns mobile, 5 at >=420px, 6+ at desktop */
+/* grid cards — compact but spaced more to avoid "nempel" */
 .grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:8px;
+  gap:12px; /* increased gap */
+  margin-top:14px; /* add top spacing so not too high */
 }
 @media(min-width:420px){ .grid{grid-template-columns:repeat(5,1fr);} }
 @media(min-width:900px){ .grid{grid-template-columns:repeat(6,1fr);} }
@@ -63,13 +69,13 @@ body{
   flex-direction:column;
   align-items:center;
   justify-content:flex-start;
-  min-height:110px;
+  min-height:120px; /* slightly taller to avoid look cramped */
 }
 .card:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,0.10);}
 
 /* small compact card variant */
 .small-card{padding:6px;border-radius:8px;}
-.card img{width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:6px;}
+.card img{width:100%;height:84px;object-fit:cover;border-radius:6px;margin-bottom:6px;}
 .card h3{margin:4px 0;font-size:12px;line-height:1.1;}
 .card p{margin:0;color:#666;font-size:11px;}
 
@@ -79,12 +85,25 @@ body{
 /* focus visible for keyboard users */
 .card:focus{outline:3px solid rgba(255,180,0,0.18);}
 
-/* items header: small logo next to title */
-.items-header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.title-wrap{display:flex;align-items:center;gap:10px;}
-.category-logo{width:44px;height:44px;object-fit:cover;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+/* items header: small logo next to title; add spacing (not overlapping) */
+.items-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;}
+.title-wrap{display:flex;align-items:center;gap:12px;}
+.category-logo{width:46px;height:46px;object-fit:cover;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.08);}
 
-/* detail layout */
+/* controls centered with column layout so "search centered" and "filters below search" */
+.controls{display:flex;gap:10px;align-items:center;margin-bottom:8px;}
+.controls-centered{display:flex;flex-direction:column;align-items:center;gap:8px;}
+input[type="search"]{
+  width:100%;
+  max-width:560px;
+  padding:8px 12px; /* shorter search */
+  border-radius:12px;border:none;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* Filters button placed under search (JS appends it to controls) */
+.checklist-toggle{display:inline-block;padding:8px 12px;border-radius:10px;border:none;background:var(--accent-color);cursor:pointer;font-weight:800;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+
+/* detail layout (unchanged but spacing ok) */
 .detail-wrapper{display:flex;flex-direction:column;gap:10px;}
 .hero-card{position:relative;border-radius:10px;overflow:hidden; margin-top:8px;}
 .hero-img{width:100%;height:220px;object-fit:cover;display:block;border-radius:8px;}
@@ -93,20 +112,15 @@ body{
 .hero-overlay p{margin:6px 0;color:#444;font-size:13px;}
 .hero-desc{font-size:13px;}
 
-/* tags styled as buttons in detail (clickable) */
+/* tag buttons */
 .item-tags{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
 .tag-btn{background:var(--tag-bg);border:none;padding:6px 8px;border-radius:999px;font-weight:800;font-size:11px;box-shadow:0 6px 18px rgba(0,0,0,0.06);cursor:pointer;}
 .tag-btn:hover{transform:translateY(-2px);}
 
-/* narrative card (longer text) */
+/* narrative */
 .narrative{padding:12px;}
 .narrative h3{margin:0 0 8px 0;}
 .lore-text{color:#333;line-height:1.45;font-size:13px;}
-
-/* extras */
-.extras{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;margin-top:6px;}
-.extra-thumb{width:30%;min-width:80px;cursor:pointer;}
-.extra-thumb img{width:100%;height:72px;object-fit:cover;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);}
 
 /* modern checklist / chips */
 .checklist-panel{background:var(--tag-bg);border-radius:12px;padding:10px;margin-bottom:12px;box-shadow:0 10px 30px rgba(0,0,0,0.08);}
@@ -143,4 +157,6 @@ body{
   .hero-img{height:180px;}
   .extra-thumb img{height:60px;}
   .controls{flex-direction:column;gap:8px;}
+  .items-header{padding-bottom:8px;}
+  .category-logo{width:40px;height:40px;}
 }
