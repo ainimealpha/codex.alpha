@@ -1,14 +1,48 @@
-// script.js - revised layout + detail tags + safer fallbacks
+// script.js - revised layout, modern filter chips, category color themes, detail tags, back label
 
 // Navigation helpers
 function goHome(){ window.location.href = "index.html"; }
 function goBack(){ window.history.back(); }
 
+// Category theme mapping (pastel gradients + tag bg)
+const CATEGORY_THEME = {
+  CHARACTER: {
+    bg: "linear-gradient(180deg,#ffe6e8,#ffd6da)", // red pastel
+    tagBg: "#ffd6da",
+    accent: "#ff6b6b"
+  },
+  AREA: {
+    bg: "linear-gradient(180deg,#fff2e6,#ffd9b8)", // orange pastel
+    tagBg: "#ffe6c7",
+    accent: "#ff9f43"
+  },
+  PET: {
+    bg: "linear-gradient(180deg,#fffbe6,#fff4b2)", // yellow pastel
+    tagBg: "#fff5b2",
+    accent: "#ffd54f"
+  },
+  MONSTER: {
+    bg: "linear-gradient(180deg,#f3e8ff,#e8d7ff)", // purple pastel
+    tagBg: "#eadcff",
+    accent: "#9b59b6"
+  },
+  MAGIC: {
+    bg: "linear-gradient(180deg,#e8f4ff,#d0ecff)", // blue pastel
+    tagBg: "#d6efff",
+    accent: "#4da6ff"
+  },
+  DEFAULT: {
+    bg: "linear-gradient(180deg,#fff9c4,#ffe082)",
+    tagBg: "#fff3cd",
+    accent: "#ffd54f"
+  }
+};
+
 // Find item by id across DATA
 function findItemById(id){
   let found = null;
-  Object.values(DATA).some(cat => {
-    return cat.items.some(it => {
+  Object.keys(DATA).some(catKey => {
+    return DATA[catKey].items.some(it => {
       if(String(it.id) === String(id)){ found = it; return true; }
       return false;
     });
@@ -16,8 +50,18 @@ function findItemById(id){
   return found;
 }
 
+// Apply category visual theme (used on items & detail)
+function applyCategoryTheme(catKey){
+  const theme = (catKey && CATEGORY_THEME[catKey]) ? CATEGORY_THEME[catKey] : CATEGORY_THEME.DEFAULT;
+  document.body.style.background = theme.bg;
+  // set CSS variables for tag bg and accent
+  document.documentElement.style.setProperty('--tag-bg', theme.tagBg);
+  document.documentElement.style.setProperty('--accent-color', theme.accent);
+}
+
 // Reset any body background (used before rendering pages)
 function resetBodyBackground(){
+  document.body.style.background = "";
   document.body.style.backgroundImage = "";
   document.body.style.backgroundSize = "";
   document.body.style.backgroundPosition = "";
@@ -31,7 +75,8 @@ function resetBodyBackground(){
 
 /* =========================
    PAGE 1: categories
-   - Now shows compact box grid with thumbnail (first item as preview)
+   - Compact box grid: uses smaller card variant (small-card)
+   - Thumbnail is first item main image or fallback
 ========================= */
 function renderCategories(){
   resetBodyBackground();
@@ -40,7 +85,6 @@ function renderCategories(){
   container.innerHTML = "";
   Object.keys(DATA).forEach(key => {
     const cat = DATA[key];
-    // pick a representative thumbnail (first item's main image) or placeholder
     const thumb = (cat.items && cat.items[0] && cat.items[0].images && cat.items[0].images.main) ? cat.items[0].images.main : (typeof PLACEHOLDER !== "undefined" ? PLACEHOLDER : "");
     const div = document.createElement("div");
     div.className = "card cat-card small-card";
@@ -51,9 +95,9 @@ function renderCategories(){
     `;
     div.onclick = () => {
       localStorage.setItem("activeCategory", key);
-      // clear any previous checkedTags when changing category (keeps behavior predictable)
+      // reset anything from previous category
       const si = document.getElementById("searchInput");
-      if(si) { delete si.dataset.checkedTags; si.value = ""; }
+      if(si){ delete si.dataset.checkedTags; si.value = ""; }
       window.location.href = "items.html";
     };
     div.onkeypress = (e) => { if(e.key === "Enter") div.click(); };
@@ -62,8 +106,9 @@ function renderCategories(){
 }
 
 /* =========================
-   PAGE 2: items + search + checklist
-   - Compact square cards (small-card)
+   PAGE 2: items + modern chip-style filters
+   - Compact square cards (4/5 columns mobile)
+   - Modern chip UI for tags
 ========================= */
 function uniqueTagsForCategory(catKey){
   if(!DATA[catKey]) return [];
@@ -78,11 +123,14 @@ function showChecklist(catKey){
   panel.id = "checklistPanel";
   panel.className = "checklist-panel";
   const tags = uniqueTagsForCategory(catKey);
-  let html = `<div class="checklist-header">Filter tags <button class="closeChecklist" type="button" onclick="hideChecklist()">✕</button></div>`;
-  html += `<div class="checklist-list">`;
+  let html = `<div class="checklist-header"><strong>Filter tags</strong> <button class="closeChecklist" type="button" onclick="hideChecklist()">✕</button></div>`;
+  html += `<div class="checklist-chips">`;
   if(tags.length === 0) html += `<div class="checklist-empty">No tags</div>`;
-  tags.forEach(t => { html += `<label class="chk-row"><input type="checkbox" value="${t}"> ${t}</label>`; });
-  html += `</div><div style="margin-top:10px"><button type="button" onclick="applyChecklistFilters()">Apply</button></div>`;
+  tags.forEach(t => {
+    // chip: hidden checkbox + styled span
+    html += `<label class="chip"><input type="checkbox" value="${t}"><span>${t}</span></label>`;
+  });
+  html += `</div><div class="checklist-actions"><button type="button" class="apply-btn" onclick="applyChecklistFilters()">Apply</button></div>`;
   panel.innerHTML = html;
   const container = document.querySelector(".container");
   const itemsNode = document.getElementById("itemsContainer");
@@ -124,15 +172,18 @@ function manageChecklistToggle(catKey){
     controls.appendChild(btn);
   }
   const si = document.getElementById("searchInput");
+  // modern approach: show filters always (if search exists)
   if(!si){ btn.style.display = "none"; return; }
-  const active = (document.activeElement === si) || si.value.trim().length > 0;
-  btn.style.display = active ? "inline-block" : "none";
+  btn.style.display = "inline-block";
 }
 
 function renderItems(){
   resetBodyBackground();
   const category = localStorage.getItem("activeCategory");
   if(!category || !DATA[category]) { goHome(); return; }
+  // apply category theme
+  applyCategoryTheme(category);
+
   const data = DATA[category];
   const title = document.getElementById("categoryTitle");
   if(title) title.innerText = data.title;
@@ -141,7 +192,6 @@ function renderItems(){
   const search = searchInput ? searchInput.value.toLowerCase() : "";
   const checkedTags = (searchInput && searchInput.dataset.checkedTags) ? JSON.parse(searchInput.dataset.checkedTags) : [];
 
-  // search by name (compact) — can expand to desc/tags if desired
   let items = data.items.filter(it => it.name.toLowerCase().includes(search));
   if(checkedTags.length > 0){
     items = items.filter(it => (it.tags||[]).some(t => checkedTags.includes(t)));
@@ -178,7 +228,7 @@ function renderItems(){
 /* =========================
    PAGE 3: detail (main wallpaper fixed, extras popup-only)
    - Render tags (category badges) under the name
-   - JS WILL NOT CREATE NAV BUTTONS — HTML provides single Back/Home
+   - Apply category theme (background + tag color)
 ========================= */
 function ensureDetailOverlay(){
   let ov = document.getElementById("detailOverlay");
@@ -207,6 +257,17 @@ function renderDetail(){
   const selected = findItemById(id);
   if(!selected){ container.innerHTML = "<div class='card'><h3>Item not found</h3></div>"; return; }
 
+  // determine category for this item (prefer stored activeCategory)
+  let category = localStorage.getItem("activeCategory");
+  if(!category){
+    // fallback: find category that contains item
+    Object.keys(DATA).some(k => {
+      if(DATA[k].items.some(it => String(it.id) === String(id))){ category = k; return true; }
+      return false;
+    });
+  }
+  applyCategoryTheme(category);
+
   // MAIN wallpaper fixed to selected.images.main
   const wallpaperUrl = (selected.images && selected.images.main) ? selected.images.main : "";
   if(wallpaperUrl){
@@ -217,6 +278,7 @@ function renderDetail(){
     document.body.style.backgroundAttachment = "fixed";
   } else {
     resetBodyBackground();
+    applyCategoryTheme(category); // reapply theme if no wallpaper
   }
 
   ensureDetailOverlay();
@@ -236,7 +298,6 @@ function renderDetail(){
           <div class="item-tags">
             ${tags.map(t => `<span class="tag">${t.toUpperCase()}</span>`).join(' ')}
           </div>
-          <!-- no nav buttons here -->
         </div>
       </div>
 
@@ -282,6 +343,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   if(window.location.pathname.includes("items")){
     const si = document.getElementById("searchInput");
+    const activeCategory = localStorage.getItem("activeCategory");
+    if(activeCategory) applyCategoryTheme(activeCategory);
     if(si){
       si.addEventListener("focus", () => manageChecklistToggle(localStorage.getItem("activeCategory")));
       si.addEventListener("input", () => renderItems());
