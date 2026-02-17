@@ -10,20 +10,18 @@
 </head>
 <body>
   <main class="container">
-    <header class="header items-header">
-      <div class="title-wrap">
-        <h2 id="categoryTitle" class="title"></h2>
-        <img id="categoryLogo" class="category-logo" src="" alt="" />
-      </div>
-      <!-- BACK now always goes HOME (index) so even when navigated from detail-tag it returns to page1) -->
-      <button class="nav-btn" onclick="goHome()" aria-label="Back">← Back</button>
+    <header class="header">
+      <h2 id="categoryTitle" class="title"></h2>
+      <!-- Back button positioned to the right like requested -->
+      <button class="nav-btn" onclick="goBack()" aria-label="Back">← Back</button>
     </header>
 
-    <div class="controls controls-centered">
+    <div class="controls">
       <input id="searchInput" type="search" placeholder="Search in this category..." aria-label="Search" />
-      <!-- Filters button appended by JS and will appear below search because controls-centered is column layout -->
+      <!-- checklist toggle inserted by script when appropriate -->
     </div>
 
+    <!-- checklist panel (inserted dynamically) -->
     <section id="itemsContainer" class="grid"></section>
   </main>
 </body>
