@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Anime Codex — Home</title>
-  <!-- display font (abstract / headline) -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -13,8 +12,15 @@
 </head>
 <body>
   <main class="container">
-    <!-- Big centered title (abstract font) -->
-    <header class="header header-center">
+    <!-- carousel first (auto only) -->
+    <section id="carousel" class="carousel">
+      <div class="carousel-stage" id="carouselStage">
+        <!-- center portrait image inserted by JS -->
+      </div>
+    </section>
+
+    <!-- then header/text below the carousel as requested -->
+    <header class="header header-center below-carousel">
       <h1 class="logo big-logo">ANIME CODEX</h1>
       <div class="season-block">
         <div class="season-line">SEASON 1 - Adventure Begins</div>
@@ -22,20 +28,6 @@
       </div>
       <p class="subtitle center-sub">Tap a card to open category</p>
     </header>
-
-    <!-- carousel area for categories (auto + manual slide) -->
-    <section id="carousel" class="carousel">
-      <!-- left nav kept (small) but will hide on very small screens; right nav removed per request -->
-      <button class="carousel-nav prev" aria-label="Previous" onclick="carouselPrev()">‹</button>
-
-      <div class="carousel-stage" id="carouselStage">
-        <!-- left / center / right panels inserted by JS -->
-      </div>
-
-      <!-- indicators always centered below -->
-      <div class="carousel-indicators" id="carouselIndicators"></div>
-    </section>
-
   </main>
 </body>
 </html>
