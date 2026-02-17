@@ -1,4 +1,4 @@
-// script.js - FIXED: remove hero overlay buttons so Back/Home appear only once (the static buttons in detail.html)
+// script.js - revised layout + detail tags + safer fallbacks
 
 // Navigation helpers
 function goHome(){ window.location.href = "index.html"; }
@@ -31,6 +31,7 @@ function resetBodyBackground(){
 
 /* =========================
    PAGE 1: categories
+   - Now shows compact box grid with thumbnail (first item as preview)
 ========================= */
 function renderCategories(){
   resetBodyBackground();
@@ -39,12 +40,20 @@ function renderCategories(){
   container.innerHTML = "";
   Object.keys(DATA).forEach(key => {
     const cat = DATA[key];
+    // pick a representative thumbnail (first item's main image) or placeholder
+    const thumb = (cat.items && cat.items[0] && cat.items[0].images && cat.items[0].images.main) ? cat.items[0].images.main : (typeof PLACEHOLDER !== "undefined" ? PLACEHOLDER : "");
     const div = document.createElement("div");
-    div.className = "card cat-card";
+    div.className = "card cat-card small-card";
     div.tabIndex = 0;
-    div.innerHTML = `<h3>${cat.title}</h3>`;
+    div.innerHTML = `
+      <img src="${thumb}" alt="${cat.title} preview" loading="lazy">
+      <h3>${cat.title}</h3>
+    `;
     div.onclick = () => {
       localStorage.setItem("activeCategory", key);
+      // clear any previous checkedTags when changing category (keeps behavior predictable)
+      const si = document.getElementById("searchInput");
+      if(si) { delete si.dataset.checkedTags; si.value = ""; }
       window.location.href = "items.html";
     };
     div.onkeypress = (e) => { if(e.key === "Enter") div.click(); };
@@ -54,6 +63,7 @@ function renderCategories(){
 
 /* =========================
    PAGE 2: items + search + checklist
+   - Compact square cards (small-card)
 ========================= */
 function uniqueTagsForCategory(catKey){
   if(!DATA[catKey]) return [];
@@ -68,15 +78,18 @@ function showChecklist(catKey){
   panel.id = "checklistPanel";
   panel.className = "checklist-panel";
   const tags = uniqueTagsForCategory(catKey);
-  let html = `<div class="checklist-header">Filter tags <button class="closeChecklist" onclick="hideChecklist()">✕</button></div>`;
+  let html = `<div class="checklist-header">Filter tags <button class="closeChecklist" type="button" onclick="hideChecklist()">✕</button></div>`;
   html += `<div class="checklist-list">`;
   if(tags.length === 0) html += `<div class="checklist-empty">No tags</div>`;
   tags.forEach(t => { html += `<label class="chk-row"><input type="checkbox" value="${t}"> ${t}</label>`; });
-  html += `</div><div style="margin-top:10px"><button onclick="applyChecklistFilters()">Apply</button></div>`;
+  html += `</div><div style="margin-top:10px"><button type="button" onclick="applyChecklistFilters()">Apply</button></div>`;
   panel.innerHTML = html;
   const container = document.querySelector(".container");
   const itemsNode = document.getElementById("itemsContainer");
-  container.insertBefore(panel, itemsNode);
+  if(container){
+    if(itemsNode) container.insertBefore(panel, itemsNode);
+    else container.appendChild(panel);
+  }
 }
 
 function hideChecklist(){
@@ -102,6 +115,7 @@ function manageChecklistToggle(catKey){
     btn = document.createElement("button");
     btn.id = "checklistToggleBtn";
     btn.className = "checklist-toggle nav-btn";
+    btn.type = "button";
     btn.textContent = "Filters";
     btn.onclick = () => {
       const panel = document.getElementById("checklistPanel");
@@ -127,12 +141,14 @@ function renderItems(){
   const search = searchInput ? searchInput.value.toLowerCase() : "";
   const checkedTags = (searchInput && searchInput.dataset.checkedTags) ? JSON.parse(searchInput.dataset.checkedTags) : [];
 
+  // search by name (compact) — can expand to desc/tags if desired
   let items = data.items.filter(it => it.name.toLowerCase().includes(search));
   if(checkedTags.length > 0){
     items = items.filter(it => (it.tags||[]).some(t => checkedTags.includes(t)));
   }
 
   const container = document.getElementById("itemsContainer");
+  if(!container) return;
   container.innerHTML = "";
   manageChecklistToggle(category);
 
@@ -143,8 +159,8 @@ function renderItems(){
 
   items.forEach(it => {
     const div = document.createElement("div");
-    div.className = "card item-card";
-    const thumb = it.images && it.images.main ? it.images.main : "";
+    div.className = "card item-card small-card";
+    const thumb = (it.images && it.images.main) ? it.images.main : (typeof PLACEHOLDER !== "undefined" ? PLACEHOLDER : "");
     div.innerHTML = `
       <img src="${thumb}" loading="lazy" alt="${it.name}">
       <h3>${it.name}</h3>
@@ -161,7 +177,8 @@ function renderItems(){
 
 /* =========================
    PAGE 3: detail (main wallpaper fixed, extras popup-only)
-   IMPORTANT: JS WILL NOT CREATE NAV BUTTONS — HTML provides single Back/Home
+   - Render tags (category badges) under the name
+   - JS WILL NOT CREATE NAV BUTTONS — HTML provides single Back/Home
 ========================= */
 function ensureDetailOverlay(){
   let ov = document.getElementById("detailOverlay");
@@ -206,6 +223,7 @@ function renderDetail(){
 
   const mainImg = (selected.images && selected.images.main) ? selected.images.main : "";
   const extras = (selected.images && selected.images.extras) ? selected.images.extras.slice(0,3) : [];
+  const tags = (selected.tags || []).slice(0,10);
 
   // Render hero and extras WITHOUT adding nav buttons here
   container.innerHTML = `
@@ -214,8 +232,11 @@ function renderDetail(){
         <img class="hero-img" src="${mainImg}" alt="${selected.name} main">
         <div class="hero-overlay">
           <h2>${selected.name}</h2>
-          <p>${selected.desc}</p>
-          <!-- NOTE: no buttons here to avoid duplicates -->
+          <p class="hero-desc">${selected.desc}</p>
+          <div class="item-tags">
+            ${tags.map(t => `<span class="tag">${t.toUpperCase()}</span>`).join(' ')}
+          </div>
+          <!-- no nav buttons here -->
         </div>
       </div>
 
@@ -233,6 +254,9 @@ function openImageModal(src){
   if(!modal || !img) return;
   img.src = src;
   modal.style.display = "flex";
+  // accessibility: focus close button when opening modal
+  const closeBtn = document.getElementById("modalCloseBtn");
+  if(closeBtn) closeBtn.focus();
   document.addEventListener("keydown", escModalHandler);
 }
 
