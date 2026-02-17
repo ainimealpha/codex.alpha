@@ -1,5 +1,8 @@
-// script.js - fixes: remove right nav causing visual bug, center indicators, items search/filter layout,
-// keep core behavior: carousel, items, detail, tag-jump, pendingTag
+// script.js - focused revisions:
+// - index: auto-slide only (no manual controls/indicators), portrait center image, header moved below carousel
+// - items: Back => goHome()
+// - detail: extras arranged 3-side-by-side (equal size)
+// - tag click behavior unchanged (pendingTag) but back behavior ensured by items back => goHome()
 
 // Navigation helpers
 function goHome(){ window.location.href = "index.html"; }
@@ -15,7 +18,7 @@ const CATEGORY_THEME = {
   DEFAULT:   { bg: "linear-gradient(180deg,#f9f1ff,#e6f7ff)", tagBg: "#fff3cd", accent: "#ffd54f" }
 };
 
-// shared helpers
+// data helpers
 function categoryKeys(){ return Object.keys(DATA); }
 function repImageForCategory(catKey){
   if(!DATA[catKey]) return (typeof PLACEHOLDER !== "undefined" ? PLACEHOLDER : "");
@@ -23,7 +26,7 @@ function repImageForCategory(catKey){
   return (it && it.images && it.images.main) ? it.images.main : (typeof PLACEHOLDER !== "undefined" ? PLACEHOLDER : "");
 }
 
-// Find item by id across DATA
+// find item
 function findItemById(id){
   let found = null;
   Object.keys(DATA).some(catKey => {
@@ -35,7 +38,7 @@ function findItemById(id){
   return found;
 }
 
-// Apply category visual theme (used on items & detail)
+// theming
 function applyCategoryTheme(catKey){
   const theme = (catKey && CATEGORY_THEME[catKey]) ? CATEGORY_THEME[catKey] : CATEGORY_THEME.DEFAULT;
   document.body.style.background = theme.bg;
@@ -43,7 +46,6 @@ function applyCategoryTheme(catKey){
   document.documentElement.style.setProperty('--accent-color', theme.accent);
 }
 
-// Reset any body background
 function resetBodyBackground(){
   document.body.style.background = "";
   document.body.style.backgroundImage = "";
@@ -58,8 +60,7 @@ function resetBodyBackground(){
 }
 
 /* =========================
-   INDEX (page 1) - Carousel
-   - Right nav removed; indicators always centered under carousel
+   INDEX: auto-slide only
 ========================= */
 let carouselIndex = 0;
 let carouselTimer = null;
@@ -67,45 +68,21 @@ const CAROUSEL_INTERVAL = 3500;
 
 function renderCarousel(){
   const stage = document.getElementById("carouselStage");
-  const indicators = document.getElementById("carouselIndicators");
   if(!stage) return;
   const keys = categoryKeys();
   if(keys.length === 0){ stage.innerHTML = ""; return; }
   const total = keys.length;
-
   const centerKey = keys[carouselIndex];
-  const leftIndex = (carouselIndex - 1 + total) % total;
-  const rightIndex = (carouselIndex + 1) % total;
-  const leftKey = keys[leftIndex];
-  const rightKey = keys[rightIndex];
-
   const centerImg = repImageForCategory(centerKey);
-  const leftImg = repImageForCategory(leftKey);
-  const rightImg = repImageForCategory(rightKey);
 
+  // only center portrait image (auto-slide). left/right omitted (no manual)
   stage.innerHTML = `
-    <div class="slot left-slot" data-key="${leftKey}">
-      <img src="${leftImg}" alt="${leftKey} preview" loading="lazy">
-      <div class="slot-title">${DATA[leftKey].title}</div>
-    </div>
-
     <div class="slot center-slot" data-key="${centerKey}">
       <img src="${centerImg}" alt="${centerKey} preview" loading="lazy">
-      <div class="center-overlay">
-        <div class="center-title">${DATA[centerKey].title}</div>
-      </div>
-    </div>
-
-    <div class="slot right-slot" data-key="${rightKey}">
-      <img src="${rightImg}" alt="${rightKey} preview" loading="lazy">
-      <div class="slot-title">${DATA[rightKey].title}</div>
     </div>
   `;
 
-  // indicators centered under
-  indicators.innerHTML = keys.map((k, i) => `<button class="dot ${i===carouselIndex?'active':''}" onclick="carouselGo(${i})" aria-label="Slide ${i+1}"></button>`).join('');
-
-  // center click -> go to items
+  // center click navigates to items
   const centerNode = stage.querySelector(".center-slot");
   if(centerNode){
     centerNode.style.cursor = "pointer";
@@ -116,11 +93,6 @@ function renderCarousel(){
       window.location.href = "items.html";
     };
   }
-
-  const leftNode = stage.querySelector(".left-slot");
-  if(leftNode) leftNode.onclick = () => carouselPrev();
-  const rightNode = stage.querySelector(".right-slot");
-  if(rightNode) rightNode.onclick = () => carouselNext();
 }
 
 function carouselNext(){
@@ -128,23 +100,6 @@ function carouselNext(){
   if(keys.length === 0) return;
   carouselIndex = (carouselIndex + 1) % keys.length;
   renderCarousel();
-  restartCarouselTimer();
-}
-
-function carouselPrev(){
-  const keys = categoryKeys();
-  if(keys.length === 0) return;
-  carouselIndex = (carouselIndex - 1 + keys.length) % keys.length;
-  renderCarousel();
-  restartCarouselTimer();
-}
-
-function carouselGo(i){
-  const keys = categoryKeys();
-  if(i < 0 || i >= keys.length) return;
-  carouselIndex = i;
-  renderCarousel();
-  restartCarouselTimer();
 }
 
 function restartCarouselTimer(){
@@ -159,11 +114,8 @@ function initCarousel(){
 }
 
 /* =========================
-   PAGE 2: items + modern chip-style filters (themed checklist BG)
-   - Search centered, shorter; Filters placed under search
-   - Spacing increased so cards don't "nempel"
+   ITEMS: search/filters + Back => goHome
 ========================= */
-
 function uniqueTagsForCategory(catKey){
   if(!DATA[catKey]) return [];
   const s = new Set();
@@ -193,10 +145,7 @@ function showChecklist(catKey){
   }
 }
 
-function hideChecklist(){
-  const panel = document.getElementById("checklistPanel");
-  if(panel) panel.remove();
-}
+function hideChecklist(){ const panel = document.getElementById("checklistPanel"); if(panel) panel.remove(); }
 
 function applyChecklistFilters(){
   const panel = document.getElementById("checklistPanel");
@@ -222,7 +171,6 @@ function manageChecklistToggle(catKey){
       const panel = document.getElementById("checklistPanel");
       if(panel) hideChecklist(); else showChecklist(catKey);
     };
-    // ensure button appears below search (controls is column-centered)
     controls.appendChild(btn);
   }
   const si = document.getElementById("searchInput");
@@ -240,21 +188,15 @@ function renderItems(){
   const title = document.getElementById("categoryTitle");
   if(title) title.innerText = data.title;
 
-  // set small logo next to title
   const logo = document.getElementById("categoryLogo");
-  if(logo){
-    logo.src = repImageForCategory(category);
-    logo.alt = data.title + " logo";
-  }
+  if(logo){ logo.src = repImageForCategory(category); logo.alt = data.title + " logo"; }
 
   const searchInput = document.getElementById("searchInput");
   const search = searchInput ? searchInput.value.toLowerCase() : "";
   const checkedTags = (searchInput && searchInput.dataset.checkedTags) ? JSON.parse(searchInput.dataset.checkedTags) : [];
 
   let items = data.items.filter(it => it.name.toLowerCase().includes(search));
-  if(checkedTags.length > 0){
-    items = items.filter(it => (it.tags||[]).some(t => checkedTags.includes(t)));
-  }
+  if(checkedTags.length > 0){ items = items.filter(it => (it.tags||[]).some(t => checkedTags.includes(t))); }
 
   const container = document.getElementById("itemsContainer");
   if(!container) return;
@@ -284,7 +226,7 @@ function renderItems(){
   });
 }
 
-/* apply pendingTag on load (when coming from detail) */
+/* pendingTag handling */
 function applyPendingTagOnLoad(){
   const pending = localStorage.getItem("pendingTag");
   if(!pending) return;
@@ -298,30 +240,19 @@ function applyPendingTagOnLoad(){
       cb.checked = true;
       applyChecklistFilters();
       localStorage.removeItem("pendingTag");
-    } else {
-      localStorage.removeItem("pendingTag");
-    }
+    } else { localStorage.removeItem("pendingTag"); }
   }, 150);
 }
 
 /* =========================
-   PAGE 3: unchanged core behavior (tag click -> pendingTag handled above)
+   DETAIL: extras 3 side-by-side (equal)
 ========================= */
 function ensureDetailOverlay(){
   let ov = document.getElementById("detailOverlay");
-  if(!ov){
-    ov = document.createElement("div");
-    ov.id = "detailOverlay";
-    document.body.appendChild(ov);
-  }
-  ov.style.position = "fixed";
-  ov.style.top = "0";
-  ov.style.left = "0";
-  ov.style.right = "0";
-  ov.style.bottom = "0";
+  if(!ov){ ov = document.createElement("div"); ov.id = "detailOverlay"; document.body.appendChild(ov); }
+  ov.style.position = "fixed"; ov.style.top = "0"; ov.style.left = "0"; ov.style.right = "0"; ov.style.bottom = "0";
   ov.style.background = "linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0.95))";
-  ov.style.pointerEvents = "none";
-  ov.style.zIndex = "1";
+  ov.style.pointerEvents = "none"; ov.style.zIndex = "1";
   const c = document.querySelector(".container");
   if(c){ c.style.position = "relative"; c.style.zIndex = "2"; }
 }
@@ -360,7 +291,7 @@ function renderDetail(){
   const mainImg = (selected.images && selected.images.main) ? selected.images.main : "";
   const extras = (selected.images && selected.images.extras) ? selected.images.extras.slice(0,3) : [];
   const tags = (selected.tags || []).slice(0,10);
-  const narrative = selected.lore ? selected.lore : `${selected.desc} Legends whisper of its origin: a tale woven through time and conflict, shaping the fate of many who stand before it. Once rumored to be forged in ancient trials, its presence now marks the turning point of many adventures.`;
+  const narrative = selected.lore ? selected.lore : `${selected.desc} Legends whisper of its origin: a tale woven through time and conflict, shaping the fate of many who stand before it.`;
 
   container.innerHTML = `
     <div class="detail-wrapper">
@@ -380,7 +311,7 @@ function renderDetail(){
         <p class="lore-text">${narrative}</p>
       </div>
 
-      <div class="extras">
+      <div class="extras equal-extras">
         ${extras.map((src, idx) => `<div class="extra-thumb"><img src="${src}" alt="extra ${idx+1}" onclick="openImageModal('${src}')"></div>`).join('')}
       </div>
     </div>
@@ -393,7 +324,7 @@ function onDetailTagClick(tag, category){
   window.location.href = "items.html";
 }
 
-/* Modal handlers (unchanged) */
+/* Modal handlers */
 function openImageModal(src){
   const modal = document.getElementById("imgModal");
   const img = document.getElementById("imgModalImg");
@@ -404,12 +335,7 @@ function openImageModal(src){
   if(closeBtn) closeBtn.focus();
   document.addEventListener("keydown", escModalHandler);
 }
-
-function closeImageModal(){
-  const modal = document.getElementById("imgModal");
-  if(modal) modal.style.display = "none";
-  document.removeEventListener("keydown", escModalHandler);
-}
+function closeImageModal(){ const modal = document.getElementById("imgModal"); if(modal) modal.style.display = "none"; document.removeEventListener("keydown", escModalHandler); }
 function escModalHandler(e){ if(e.key === "Escape") closeImageModal(); }
 
 document.addEventListener("click", function(e){
@@ -420,12 +346,10 @@ document.addEventListener("click", function(e){
 
 /* Document init */
 document.addEventListener("DOMContentLoaded", function(){
-  // INDEX
   if(window.location.pathname.endsWith("index.html") || window.location.pathname === "/" || window.location.pathname.indexOf("/index")!==-1){
     initCarousel();
   }
 
-  // ITEMS page
   if(window.location.pathname.includes("items")){
     const si = document.getElementById("searchInput");
     const activeCategory = localStorage.getItem("activeCategory");
@@ -434,16 +358,12 @@ document.addEventListener("DOMContentLoaded", function(){
       si.addEventListener("focus", () => manageChecklistToggle(localStorage.getItem("activeCategory")));
       si.addEventListener("input", () => renderItems());
       si.addEventListener("blur", () => setTimeout(()=>manageChecklistToggle(localStorage.getItem("activeCategory")), 150));
-      // center shorter search: ensure style applied by CSS
     }
     renderItems();
     setTimeout(()=>applyPendingTagOnLoad(), 250);
   }
 
-  // DETAIL page
-  if(window.location.pathname.includes("detail")){
-    renderDetail();
-  }
+  if(window.location.pathname.includes("detail")){ renderDetail(); }
 
   const modalClose = document.getElementById("modalCloseBtn");
   if(modalClose) modalClose.onclick = closeImageModal;
