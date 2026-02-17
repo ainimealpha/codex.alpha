@@ -10,13 +10,13 @@
 </head>
 <body>
   <main class="container">
+    <!-- Back button moved to top-right (fixed) -->
+    <button class="nav-btn detail-back" onclick="goBack()" aria-label="Back">←</button>
+
     <div id="detailContainer"></div>
 
-    <div class="detail-actions">
-      <!-- Only one Back and one Home button -->
-      <button class="nav-btn" onclick="goBack()" aria-label="Back">← Back</button>
-      <button class="nav-btn" onclick="goHome()" aria-label="Home">🏠 Home</button>
-    </div>
+    <!-- Home button moved to bottom-center (fixed) -->
+    <button class="nav-btn detail-home" onclick="goHome()" aria-label="Home">🏠 Home</button>
   </main>
 
   <!-- modal node (hidden by default) - preview only -->
@@ -25,8 +25,7 @@
       <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
       <img id="imgModalImg" src="" alt="Preview image">
       <div class="modal-actions">
-        <!-- NOTE: removed textual "Close" button to keep only the X close control -->
-        <!-- <button onclick="closeImageModal()">Close</button> --> 
+        <!-- textual Close intentionally removed -->
       </div>
     </div>
   </div>
