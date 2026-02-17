@@ -15,15 +15,15 @@
         <h2 id="categoryTitle" class="title"></h2>
         <img id="categoryLogo" class="category-logo" src="" alt="" />
       </div>
-      <button class="nav-btn" onclick="goBack()" aria-label="Back">← Back</button>
+      <!-- BACK now always goes HOME (index) so even when navigated from detail-tag it returns to page1) -->
+      <button class="nav-btn" onclick="goHome()" aria-label="Back">← Back</button>
     </header>
 
     <div class="controls controls-centered">
       <input id="searchInput" type="search" placeholder="Search in this category..." aria-label="Search" />
-      <!-- The Filters button will be appended by JS below the search; style ensures it's under the search -->
+      <!-- Filters button appended by JS and will appear below search because controls-centered is column layout -->
     </div>
 
-    <!-- checklist panel (inserted dynamically) -->
     <section id="itemsContainer" class="grid"></section>
   </main>
 </body>
