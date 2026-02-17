@@ -10,18 +10,23 @@
 </head>
 <body>
   <main class="container">
+    <!-- Back button moved to top-right (fixed) with clear text -->
     <button class="nav-btn detail-back" onclick="goBack()" aria-label="Back">← Back</button>
 
     <div id="detailContainer"></div>
 
+    <!-- Home button moved to bottom-center (fixed) -->
     <button class="nav-btn detail-home" onclick="goHome()" aria-label="Home">🏠 Home</button>
   </main>
 
+  <!-- modal node (hidden by default) - preview only -->
   <div id="imgModal" class="img-modal" style="display:none;">
     <div class="img-modal-content" role="dialog" aria-modal="true">
       <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
       <img id="imgModalImg" src="" alt="Preview image">
-      <div class="modal-actions"></div>
+      <div class="modal-actions">
+        <!-- textual Close intentionally removed -->
+      </div>
     </div>
   </div>
 </body>
