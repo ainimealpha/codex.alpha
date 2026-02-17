@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anime Codex — Items</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js"></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h2 id="categoryTitle" class="title"></h2>
+      <button class="nav-btn" onclick="goBack()" aria-label="Back">← Back</button>
+    </header>
+
+    <div class="controls">
+      <input id="searchInput" type="search" placeholder="Search in this category..." aria-label="Search" />
+      <!-- checklist toggle is inserted by script when appropriate -->
+    </div>
+
+    <!-- checklist panel (inserted dynamically) -->
+    <section id="itemsContainer" class="grid"></section>
+    
+  </main>
+</body>
+</html>

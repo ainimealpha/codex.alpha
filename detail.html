@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anime Codex — Detail</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js"></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="container">
+    <div id="detailContainer"></div>
+
+    <div class="detail-actions">
+      <!-- Only one Back and one Home button -->
+      <button class="nav-btn" onclick="goBack()" aria-label="Back">← Back</button>
+      <button class="nav-btn" onclick="goHome()" aria-label="Home">🏠 Home</button>
+    </div>
+  </main>
+
+  <!-- modal node (hidden by default) - preview only -->
+  <div id="imgModal" class="img-modal" style="display:none;">
+    <div class="img-modal-content" role="dialog" aria-modal="true">
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
+      <img id="imgModalImg" src="" alt="Preview image">
+      <div class="modal-actions">
+        <!-- NOTE: removed textual "Close" button to keep only the X close control -->
+        <!-- <button onclick="closeImageModal()">Close</button> --> 
+      </div>
+    </div>
+  </div>
+</body>
+</html>
